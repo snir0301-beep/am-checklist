@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>צ'קליסט צוות חשבים — אם הנדסה</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE9;
+    --border: #E2DDD6;
+    --border2: #CCC8BE;
+    --text: #1A1916;
+    --text2: #6B6760;
+    --text3: #9E9A94;
+    --purple: #5B4FCF;
+    --purple-light: #EAE8FA;
+    --purple-mid: #A89FE8;
+    --green: #1B7A4C;
+    --green-light: #E3F5EC;
+    --blue: #1A5FAD;
+    --blue-light: #E3EEFA;
+    --amber: #96580A;
+    --amber-light: #FDF0DC;
+    --red: #B53030;
+    --red-light: #FDEAEA;
+    --teal: #0E7067;
+    --teal-light: #DFF4F0;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ─── LOADER ─── */
+  #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 999; }
+  .loader-logo { font-size: 28px; font-weight: 700; color: var(--purple); letter-spacing: -0.5px; }
+  .loader-bar { width: 200px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .loader-bar-fill { height: 100%; width: 0; background: var(--purple); border-radius: 2px; animation: load 1.2s ease forwards; }
+  @keyframes load { to { width: 100%; } }
+
+  /* ─── HEADER ─── */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 16px; }
+  .logo { font-size: 17px; font-weight: 700; color: var(--purple); letter-spacing: -0.3px; white-space: nowrap; }
+  .logo span { color: var(--text2); font-weight: 400; font-size: 14px; margin-right: 6px; }
+  .header-spacer { flex: 1; }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all .15s; }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+  .btn-primary { background: var(--purple); color: #fff; }
+  .btn-primary:hover { background: #4A40B0; }
+  .btn-danger { background: var(--red-light); color: var(--red); }
+  .btn-danger:hover { background: #F5CECE; }
+  .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  /* ─── MAIN LAYOUT ─── */
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 768px) { main { grid-template-columns: 1fr; padding: 16px; } }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 80px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .card-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; }
+
+  /* Progress card */
+  .progress-ring-wrap { padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 5; }
+  .ring-fill { fill: none; stroke: var(--purple); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset .5s ease; }
+  .ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .ring-wrap { position: relative; width: 90px; height: 90px; }
+  .ring-pct { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+  .ring-lbl { font-size: 11px; color: var(--text3); }
+  .progress-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .pstat { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px; text-align: center; }
+  .pstat-n { font-size: 18px; font-weight: 600; color: var(--text); }
+  .pstat-l { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* Team card */
+  .team-list { padding: 8px 0; }
+  .team-item { display: flex; align-items: center; gap: 10px; padding: 7px 16px; cursor: pointer; border-radius: 0; transition: background .1s; }
+  .team-item:hover { background: var(--surface2); }
+  .team-item.active { background: var(--purple-light); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .av-snir { background: var(--green-light); color: var(--green); }
+  .av-natanel { background: var(--blue-light); color: var(--blue); }
+  .av-borik { background: var(--amber-light); color: var(--amber); }
+  .av-all { background: var(--purple-light); color: var(--purple); }
+  .av-new { background: var(--surface2); color: var(--text3); border: 1px dashed var(--border2); }
+  .team-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+  .team-count { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 2px 7px; border-radius: 10px; }
+  .team-item.active .team-name { color: var(--purple); }
+  .team-item.active .team-count { background: var(--purple-light); color: var(--purple); }
+
+  /* Add member */
+  .add-member-form { padding: 10px 16px 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .add-member-form input, .add-member-form select { width: 100%; font-family: inherit; font-size: 13px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+  .add-member-form input:focus, .add-member-form select:focus { outline: none; border-color: var(--purple-mid); }
+
+  /* Freq filter */
+  .freq-filters { padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .freq-chip { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; font-weight: 500; transition: background .1s; }
+  .freq-chip:hover { background: var(--surface2); }
+  .freq-chip.active { background: var(--purple-light); color: var(--purple); }
+  .freq-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .freq-lbl { flex: 1; }
+  .freq-c { font-size: 11px; color: var(--text3); }
+
+  /* ─── CONTENT ─── */
+  .content { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Search + toolbar */
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .search-wrap { flex: 1; min-width: 200px; position: relative; }
+  .search-wrap svg { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text3); pointer-events: none; }
+  .search-inp { width: 100%; font-family: inherit; font-size: 13px; padding: 8px 34px 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+  .search-inp:focus { outline: none; border-color: var(--purple-mid); }
+
+  /* Section card */
+  .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .section-head { display: flex; align-items: center; gap: 10px; padding: 13px 16px; cursor: pointer; user-select: none; }
+  .section-head:hover { background: var(--surface2); }
+  .section-chevron { color: var(--text3); transition: transform .2s; flex-shrink: 0; }
+  .section-chevron.open { transform: rotate(180deg); }
+  .section-name { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+  .section-badges { display: flex; align-items: center; gap: 8px; }
+  .owner-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 12px; }
+  .progress-pill { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 3px 9px; border-radius: 12px; }
+  .progress-pill.done { color: var(--green); background: var(--green-light); }
+  .section-pbar-wrap { height: 2px; background: var(--border); }
+  .section-pbar { height: 100%; background: var(--purple); transition: width .4s; }
+
+  /* Task list */
+  .tasks-body { }
+  .task-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px; border-top: 1px solid var(--border); transition: background .1s; position: relative; }
+  .task-row:hover { background: var(--surface2); }
+  .task-cb { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--purple); flex-shrink: 0; cursor: pointer; }
+  .task-main { flex: 1; min-width: 0; }
+  .task-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .task-text.done { text-decoration: line-through; color: var(--text3); }
+  .task-note { font-size: 11px; color: var(--amber); margin-top: 3px; }
+  .task-note.info { color: var(--text3); }
+  .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .freq-tag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+  .f-daily { background: var(--green-light); color: var(--green); }
+  .f-weekly { background: var(--amber-light); color: var(--amber); }
+  .f-monthly { background: var(--blue-light); color: var(--blue); }
+  .f-quarterly { background: var(--purple-light); color: var(--purple); }
+  .f-annual { background: var(--red-light); color: var(--red); }
+  .f-adhoc { background: var(--surface2); color: var(--text3); }
+  .task-actions { display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+  .task-row:hover .task-actions { opacity: 1; }
+  .icon-btn { background: none; border: none; cursor: pointer; padding: 4px; color: var(--text3); border-radius: 4px; transition: all .1s; display: flex; }
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+  .icon-btn.del:hover { background: var(--red-light); color: var(--red); }
+  .icon-btn svg { width: 14px; height: 14px; }
+
+  /* Add task row */
+  .add-task-row { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-top: 1px solid var(--border); background: var(--surface2); }
+  .add-task-inp { flex: 1; font-family: inherit; font-size: 13px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+  .add-task-inp:focus { outline: none; border-color: var(--purple-mid); }
+  .add-task-sel { font-family: inherit; font-size: 12px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text2); }
+  .add-task-sel:focus { outline: none; border-color: var(--purple-mid); }
+  .add-task-btn { width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--purple); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+  .add-task-btn:hover { background: #4A40B0; }
+  .add-task-btn svg { width: 15px; height: 15px; }
+
+  /* Add section */
+  .add-section-card { background: var(--surface); border: 2px dashed var(--border2); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .add-section-card input, .add-section-card select { font-family: inherit; font-size: 13px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+  .add-section-card input { flex: 1; min-width: 150px; }
+  .add-section-card input:focus, .add-section-card select:focus { outline: none; border-color: var(--purple-mid); }
+
+  /* Empty */
+  .empty { padding: 40px 16px; text-align: center; color: var(--text3); font-size: 13px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text); color: #fff; font-size: 13px; padding: 10px 20px; border-radius: var(--radius); opacity: 0; pointer-events: none; transition: all .3s; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Modal */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 24px; width: 100%; max-width: 420px; }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+  .modal-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .modal-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .modal input, .modal select { font-family: inherit; font-size: 14px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); width: 100%; }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--purple-mid); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  .hidden { display: none !important; }
+
+  /* ─── Colors per owner dynamic ─── */
+  .ov-שניר { background: var(--green-light); color: var(--green); }
+  .ov-נתנאל { background: var(--blue-light); color: var(--blue); }
+  .ov-בורק { background: var(--amber-light); color: var(--amber); }
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-logo">אם הנדסה</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">צ'קליסט חשבים<span>אם הנדסה</span></div>
+    <div class="header-spacer"></div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="resetAllDone()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        איפוס סימונים
+      </button>
+      <button class="btn btn-primary" onclick="openAddSection()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        הוסף חברה
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <!-- Progress -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">התקדמות</div></div>
+      <div class="progress-ring-wrap">
+        <div class="ring-wrap">
+          <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
+            <circle class="ring-bg" cx="45" cy="45" r="38"/>
+            <circle class="ring-fill" id="ring-fill" cx="45" cy="45" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" id="ring-pct">0%</div>
+            <div class="ring-lbl">בוצע</div>
+          </div>
+        </div>
+        <div class="progress-stats">
+          <div class="pstat"><div class="pstat-n" id="stat-done">0</div><div class="pstat-l">בוצעו</div></div>
+          <div class="pstat"><div class="pstat-n" id="stat-total">0</div><div class="pstat-l">סך הכל</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">סינון לפי אדם</div></div>
+      <div class="team-list" id="team-list"></div>
+      <div class="add-member-form">
+        <input type="text" id="new-member-name" placeholder="שם חבר צוות חדש">
+        <select id="new-member-role">
+          <option value="חשב">חשב</option>
+          <option value="חשב איחוד">חשב איחוד</option>
+          <option value="מנהלת חשבונות">מנהלת חשבונות</option>
+          <option value="עוזר חשב">עוזר חשב</option>
+        </select>
+        <button class="btn btn-ghost" style="justify-content:center" onclick="addMember()">+ הוסף חבר צוות</button>
+      </div>
+    </div>
+
+    <!-- Freq filter -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">סינון לפי תדירות</div></div>
+      <div class="freq-filters" id="freq-filters"></div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input class="search-inp" type="text" id="search-inp" placeholder="חיפוש משימה..." oninput="render()">
+      </div>
+    </div>
+    <div id="sections-container"></div>
+  </div>
+</main>
+
+<!-- Add section modal -->
+<div class="modal-backdrop" id="modal-section">
+  <div class="modal">
+    <div class="modal-title">הוספת חברה / קטגוריה</div>
+    <div class="modal-row">
+      <div class="modal-label">שם החברה</div>
+      <input type="text" id="ms-name" placeholder="לדוגמה: גיאוכום + גרנד">
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">אחראי ראשי</div>
+      <select id="ms-owner"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-section')">ביטול</button>
+      <button class="btn btn-primary" onclick="confirmAddSection()">הוסף</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit task modal -->
+<div class="modal-backdrop" id="modal-task">
+  <div class="modal">
+    <div class="modal-title">עריכת משימה</div>
+    <div class="modal-row">
+      <div class="modal-label">תיאור המשימה</div>
+      <input type="text" id="mt-text">
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">תדירות</div>
+      <select id="mt-freq">
+        <option value="daily">יומי</option>
+        <option value="weekly">שבועי</option>
+        <option value="monthly">חודשי</option>
+        <option value="quarterly">רבעוני</option>
+        <option value="annual">שנתי</option>
+        <option value="adhoc">לפי צורך</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">הערה (אופציונלי)</div>
+      <input type="text" id="mt-note" placeholder="הערה / פער / דגש">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-task')">ביטול</button>
+      <button class="btn btn-primary" onclick="confirmEditTask()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, remove, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBsrAQiUafnKdlXn7H-KqUpe56TY8RQvwk",
+  authDomain: "check-list-m-enginering.firebaseapp.com",
+  databaseURL: "https://check-list-m-enginering-default-rtdb.firebaseio.com",
+  projectId: "check-list-m-enginering",
+  storageBucket: "check-list-m-enginering.firebasestorage.app",
+  messagingSenderId: "763092275628",
+  appId: "1:763092275628:web:2367189ca9e8c85f446a09"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// ─── STATE ───
+window.STATE = {
+  sections: {},   // { [sectionId]: { name, owner, order, tasks: { [tid]: {text,freq,note,done} } } }
+  members: {},    // { [mid]: { name, role } }
+  activeOwner: 'all',
+  activeFreq: 'all',
+};
+
+const FREQ_LABELS = { daily:'יומי', weekly:'שבועי', monthly:'חודשי', quarterly:'רבעוני', annual:'שנתי', adhoc:'לפי צורך' };
+const FREQ_COLORS = { daily:'f-daily', weekly:'f-weekly', monthly:'f-monthly', quarterly:'f-quarterly', annual:'f-annual', adhoc:'f-adhoc' };
+const FREQ_DOT = { daily:'#1B7A4C', weekly:'#96580A', monthly:'#1A5FAD', quarterly:'#5B4FCF', annual:'#B53030', adhoc:'#9E9A94' };
+const OWNER_AV = { 'שניר':'av-snir', 'נתנאל':'av-natanel', 'בורק':'av-borik' };
+
+// ─── DEFAULT DATA (seeded once) ───
+const DEFAULT_MEMBERS = [
+  { name:'שניר', role:'חשב' },
+  { name:'נתנאל', role:'חשב' },
+  { name:'בורק', role:'חשב איחוד' },
+];
+
+const DEFAULT_SECTIONS = [
+  { name:'אי שטרן', owner:'נתנאל', order:1, tasks:[
+    {text:'בדיקת דוח עלות שכר + טיפול בהפרשים',freq:'monthly',note:'',done:false},
+    {text:'עדכון קובץ בנק ותזרים',freq:'daily',note:'',done:false},
+    {text:'תשובות ומענה להנהלת חשבונות',freq:'daily',note:'',done:false},
+    {text:'ישיבות קבועות – פרויקט משרד הכלכלה',freq:'weekly',note:'',done:false},
+    {text:'פרויקט בארי – אישור חשבוניות מול תמנע, תקבולים, חשבוניות לספקים, מעגלים בבנק, קיזוז ביטוח לקבלנים',freq:'monthly',note:'❗ שואב המון זמן',done:false},
+    {text:'עדכון קבצים לירון + מעבר על הכרות',freq:'monthly',note:'',done:false},
+    {text:'סגירת מע"מ + בדיקת הוצאות/הכנסות מול חודש קודם',freq:'monthly',note:'',done:false},
+    {text:'מעבר על תוצאות עם הנהלת חשבונות + פקודות נוספות',freq:'monthly',note:'',done:false},
+    {text:'דוח חודשי – ישיבות עם שולה וריקי, הכנסות, הוצאות ואנליטי',freq:'monthly',note:'',done:false},
+    {text:'סגירות חשבונות חתך מתחילת שנה (הוצאות מראש, לשלם וכו\')',freq:'monthly',note:'❗ לא מספיק זמן לבצע',done:false},
+    {text:'ברבעון – תז"מז, מאזן, התאמת הכנסות לקבל',freq:'quarterly',note:'',done:false},
+    {text:'ישיבה שבועית עם ירון וילנה – גביה',freq:'weekly',note:'',done:false},
+    {text:'חתימה על מכרזים / בירור ערבויות מול בנקים',freq:'adhoc',note:'',done:false},
+    {text:'דוחות כספיים + ביאורים',freq:'annual',note:'גילגול הושלם, ביאורים בתהליך',done:false},
+    {text:'רווחיות לפי פרויקט + בדיקת פרויקטים חדשים 2026',freq:'adhoc',note:'❗ עדיין לא הגענו',done:false},
+    {text:'דוחות מס 2025',freq:'annual',note:'',done:false},
+    {text:'הכנת תשתית תקציב – ספטמבר',freq:'annual',note:'',done:false},
+    {text:'IFRS + תשקיף – אם יש הנפקה',freq:'adhoc',note:'',done:false},
+  ]},
+  { name:'PGL + כהנר + פלנטק', owner:'נתנאל', order:2, tasks:[
+    {text:'הסבת נתונים מול תמר (ממשק אדמירל)',freq:'adhoc',note:'',done:false},
+    {text:'עדכון קובץ בנק ותזרים',freq:'daily',note:'',done:false},
+    {text:'תשובות ומענה להנהלת חשבונות',freq:'daily',note:'',done:false},
+    {text:'סגירת מע"מ + בדיקת הוצאות/הכנסות',freq:'monthly',note:'',done:false},
+    {text:'מעבר על תוצאות עם הנהלת חשבונות + פקודות',freq:'monthly',note:'',done:false},
+    {text:'דוח חודשי',freq:'monthly',note:'',done:false},
+    {text:'ברבעון – תז"מז, מאזן, התאמת הכנסות לקבל',freq:'quarterly',note:'',done:false},
+    {text:'דוח גביה – ניתוח שבועי',freq:'weekly',note:'',done:false},
+    {text:'דוחות מס 2025',freq:'annual',note:'',done:false},
+    {text:'הכנת תשתית תקציב – ספטמבר',freq:'annual',note:'',done:false},
+    {text:'כהנר – פרידה מעוסק מורשה',freq:'adhoc',note:'',done:false},
+    {text:'פירוק א.ב פלאן',freq:'adhoc',note:'',done:false},
+    {text:'חוזה קרן + בדיקת תקנון',freq:'adhoc',note:'',done:false},
+    {text:'IFRS + תשקיף – אם יש הנפקה',freq:'adhoc',note:'',done:false},
+  ]},
+  { name:'הוניג', owner:'נתנאל', order:3, tasks:[
+    {text:'הסבת נתונים מול תמר',freq:'adhoc',note:'',done:false},
+    {text:'טיפול בנקים – זכויות חתימה והרשאות',freq:'adhoc',note:'',done:false},
+    {text:'חפיפה עם נטלי לאחר קבלת נתונים',freq:'adhoc',note:'',done:false},
+    {text:'דוח גביה, הכנסות לקבל, דוח חודשי',freq:'monthly',note:'לאחר שהנתונים יהיו אצלנו',done:false},
+    {text:'ביקורת רו"ח',freq:'annual',note:'',done:false},
+    {text:'הנפקה – IFRS וכו\'',freq:'adhoc',note:'',done:false},
+  ]},
+  { name:'גיאוכום + גרנד', owner:'שניר', order:4, tasks:[
+    {text:'בדיקת דוח עלות שכר + טיפול בהפרשים',freq:'monthly',note:'',done:false},
+    {text:'הכנת מיוני שכר ורכבים',freq:'monthly',note:'',done:false},
+    {text:'עדכון קובץ בנק ותזרים',freq:'daily',note:'',done:false},
+    {text:'תשובות ומענה להנהלת חשבונות',freq:'daily',note:'',done:false},
+    {text:'דוח חודשי – הכנסות, הכנסות לקבל, הכרות, הוצאות, אנליטי, פקודות',freq:'monthly',note:'❗ לחזק: הוצאות חתך ותנועת הכנסות לקבל',done:false},
+    {text:'ברבעון – תז"מז, מאזן, התאמת הכנסות לקבל',freq:'quarterly',note:'',done:false},
+    {text:'צבר – מעקב חודשי + מכרזים חדשים',freq:'monthly',note:'',done:false},
+    {text:'מעקב גביה שבועי',freq:'weekly',note:'❗ לא מספיק דגש כרגע',done:false},
+    {text:'חתימה על מכרזים / בירור ערבויות',freq:'adhoc',note:'',done:false},
+    {text:'רווחיות לפי פרויקט',freq:'monthly',note:'❗ לא מספיק דגש',done:false},
+    {text:'דוחות מס 2025',freq:'annual',note:'',done:false},
+    {text:'הכנת תשתית תקציב – ספטמבר',freq:'annual',note:'',done:false},
+    {text:'IFRS + תשקיף – אם יש הנפקה',freq:'adhoc',note:'',done:false},
+  ]},
+  { name:'אתגר', owner:'שניר', order:5, tasks:[
+    {text:'בדיקת דוח עלות שכר + טיפול בהפרשים',freq:'monthly',note:'❗ אין מספיק בקרה על השכר',done:false},
+    {text:'עדכון קובץ בנק ותזרים',freq:'daily',note:'',done:false},
+    {text:'תשובות ומענה להנהלת חשבונות',freq:'daily',note:'צריך להכניס את זהבה לעניינים',done:false},
+    {text:'הסבת נתונים בפריוריטי – שנים קודמות, מרכזי רווח/עלות, חשבונות עסקה',freq:'adhoc',note:'',done:false},
+    {text:'דוח חודשי – הכנסות מיפעת, הכנסות לקבל, הכרות, הוצאות, אנליטי, פקודות',freq:'monthly',note:'❗ לחזק: הוצאות חתך ותנועת הכנסות לקבל',done:false},
+    {text:'ברבעון – תז"מז, מאזן, התאמת הכנסות לקבל',freq:'quarterly',note:'',done:false},
+    {text:'צבר – מעקב חודשי + מכרזים חדשים',freq:'monthly',note:'',done:false},
+    {text:'מעקב גביה שבועי',freq:'weekly',note:'❗ לא קורה כרגע',done:false},
+    {text:'חתימה על מכרזים / בירור ערבויות',freq:'adhoc',note:'',done:false},
+    {text:'רווחיות לפי פרויקט',freq:'monthly',note:'❗ לא קורה כרגע',done:false},
+    {text:'דוחות מס 2025',freq:'annual',note:'',done:false},
+    {text:'הכנת תשתית תקציב – ספטמבר',freq:'annual',note:'',done:false},
+    {text:'IFRS + תשקיף – אם יש הנפקה',freq:'adhoc',note:'',done:false},
+  ]},
+  { name:'עמוס חלפון', owner:'שניר', order:6, tasks:[
+    {text:'בדיקת דוח עלות שכר + טיפול בהפרשים',freq:'monthly',note:'❗ אין מספיק בקרה על השכר',done:false},
+    {text:'עדכון קובץ בנק ותזרים',freq:'daily',note:'',done:false},
+    {text:'תשובות ומענה להנהלת חשבונות',freq:'daily',note:'צריך להכניס את זהבה לעניינים',done:false},
+    {text:'דוח חודשי – הכנסות מאורית, הכנסות לקבל, הכרות, הוצאות, אנליטי, פקודות',freq:'monthly',note:'❗ לחזק: הוצאות חתך ותנועת הכנסות לקבל',done:false},
+    {text:'ישיבת תחזית חודשית עם פרסייס והמהנדסים',freq:'monthly',note:'',done:false},
+    {text:'ברבעון – תז"מז, מאזן, התאמת הכנסות לקבל',freq:'quarterly',note:'',done:false},
+    {text:'הסבת נתונים בפריוריטי – התאמות שנים קודמות, מרכזי רווח/עלות',freq:'adhoc',note:'',done:false},
+    {text:'קליטת וייסברג + עבודה על מיזוג חברות',freq:'adhoc',note:'',done:false},
+    {text:'שכר עובדים – חוזים, שינויים, גיוסים',freq:'adhoc',note:'',done:false},
+    {text:'צבר – מעקב חודשי + מכרזים חדשים',freq:'monthly',note:'',done:false},
+    {text:'מעקב גביה שבועי',freq:'weekly',note:'❗ לא קורה מספיק',done:false},
+    {text:'דוחות מס 2025',freq:'annual',note:'',done:false},
+    {text:'הכנת תשתית תקציב – ספטמבר',freq:'annual',note:'',done:false},
+    {text:'IFRS + תשקיף – אם יש הנפקה',freq:'adhoc',note:'',done:false},
+  ]},
+  { name:'בורק – כלל הקבוצה', owner:'בורק', order:7, tasks:[
+    {text:'[הוסף משימות לאחר חפיפה עם בורק]',freq:'adhoc',note:'ממתין למשימות',done:false},
+  ]},
+];
+
+// ─── INIT ───
+signInAnonymously(auth).then(async () => {
+  const snap = await new Promise(r => onValue(ref(db,'sections'), r, {onlyOnce:true}));
+  if (!snap.val()) await seedData();
+  listenAll();
+  document.getElementById('loader').style.display = 'none';
+}).catch(e => {
+  console.error(e);
+  loadOffline();
+  document.getElementById('loader').style.display = 'none';
+});
+
+async function seedData() {
+  for (const m of DEFAULT_MEMBERS) {
+    const r = push(ref(db,'members'));
+    await set(r, m);
+  }
+  for (const s of DEFAULT_SECTIONS) {
+    const { tasks, ...secMeta } = s;
+    const sr = push(ref(db,'sections'));
+    await set(sr, secMeta);
+    for (const t of tasks) {
+      const tr = push(ref(db, `tasks/${sr.key}`));
+      await set(tr, t);
+    }
+  }
+}
+
+function listenAll() {
+  onValue(ref(db,'sections'), snap => {
+    STATE.sections = snap.val() || {};
+    render();
+  });
+  onValue(ref(db,'members'), snap => {
+    STATE.members = snap.val() || {};
+    renderSidebar();
+  });
+  onValue(ref(db,'tasks'), snap => {
+    STATE._tasks = snap.val() || {};
+    render();
+  });
+}
+
+function loadOffline() {
+  toast('Firebase לא מחובר – מצב לא מקוון');
+  render();
+}
+
+// ─── RENDER ───
+window.render = function() {
+  const sections = STATE.sections || {};
+  const tasks = STATE._tasks || {};
+  const search = (document.getElementById('search-inp')?.value || '').trim().toLowerCase();
+  const activeOwner = STATE.activeOwner;
+  const activeFreq = STATE.activeFreq;
+
+  // calc totals for progress
+  let totalAll = 0, doneAll = 0;
+  Object.entries(sections).forEach(([sid, sec]) => {
+    const stasks = tasks[sid] || {};
+    Object.values(stasks).forEach(t => { totalAll++; if (t.done) doneAll++; });
+  });
+  const pct = totalAll ? Math.round(doneAll / totalAll * 100) : 0;
+  document.getElementById('ring-pct').textContent = pct + '%';
+  document.getElementById('stat-done').textContent = doneAll;
+  document.getElementById('stat-total').textContent = totalAll;
+  const circumference = 238.76;
+  document.getElementById('ring-fill').style.strokeDashoffset = circumference - (circumference * pct / 100);
+
+  // freq counts
+  const freqCounts = {};
+  Object.entries(sections).forEach(([sid, sec]) => {
+    const stasks = tasks[sid] || {};
+    Object.values(stasks).forEach(t => {
+      freqCounts[t.freq] = (freqCounts[t.freq] || 0) + 1;
+    });
+  });
+  renderFreqFilters(freqCounts);
+
+  // sections
+  const sorted = Object.entries(sections).sort(([,a],[,b]) => (a.order||0)-(b.order||0));
+  const container = document.getElementById('sections-container');
+  container.innerHTML = '';
+
+  let anyVisible = false;
+  sorted.forEach(([sid, sec]) => {
+    if (activeOwner !== 'all' && sec.owner !== activeOwner) return;
+    const stasks = tasks[sid] || {};
+    let filtered = Object.entries(stasks).filter(([tid, t]) => {
+      if (activeFreq !== 'all' && t.freq !== activeFreq) return false;
+      if (search && !t.text.toLowerCase().includes(search) && !t.note?.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    const total = Object.values(stasks).length;
+    const done = Object.values(stasks).filter(t=>t.done).length;
+    const filteredDone = filtered.filter(([,t])=>t.done).length;
+    const isOpen = STATE.openSections?.[sid] !== false;
+    anyVisible = true;
+
+    const card = document.createElement('div');
+    card.className = 'section-card';
+
+    const ownerClass = `ov-${sec.owner}`;
+    const pbarW = total ? Math.round(done/total*100) : 0;
+
+    card.innerHTML = `
+      <div class="section-head" onclick="toggleSection('${sid}')">
+        <svg class="section-chevron ${isOpen?'open':''}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        <div class="section-name">${sec.name}</div>
+        <div class="section-badges">
+          <span class="owner-pill ${ownerClass}">${sec.owner}</span>
+          <span class="progress-pill ${done===total&&total>0?'done':''}">${done}/${total}</span>
+          <button class="icon-btn del" title="מחק חברה" onclick="deleteSection(event,'${sid}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="section-pbar-wrap"><div class="section-pbar" style="width:${pbarW}%"></div></div>
+      <div class="${isOpen?'tasks-body':'hidden'}" id="tbody-${sid}">
+        ${filtered.length === 0 ? '<div class="empty">אין משימות תואמות</div>' :
+          filtered.map(([tid,t]) => taskHTML(sid,tid,t)).join('')}
+        <div class="add-task-row">
+          <input class="add-task-inp" type="text" id="new-task-${sid}" placeholder="הוסף משימה..." onkeydown="if(event.key==='Enter')addTask('${sid}')">
+          <select class="add-task-sel" id="new-freq-${sid}">
+            ${Object.entries(FREQ_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+          </select>
+          <button class="add-task-btn" onclick="addTask('${sid}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+
+  if (!anyVisible) {
+    container.innerHTML = '<div class="empty" style="padding:60px 0;text-align:center;color:var(--text3)">אין חברות להצגה</div>';
+  }
+};
+
+function taskHTML(sid, tid, t) {
+  const fc = FREQ_COLORS[t.freq] || 'f-adhoc';
+  const fl = FREQ_LABELS[t.freq] || t.freq;
+  const isWarn = t.note?.startsWith('❗');
+  return `<div class="task-row" id="tr-${tid}">
+    <input type="checkbox" class="task-cb" ${t.done?'checked':''} onchange="toggleTask('${sid}','${tid}',this.checked)">
+    <div class="task-main">
+      <div class="task-text${t.done?' done':''}">${t.text}</div>
+      ${t.note ? `<div class="task-note${isWarn?'':' info'}">${t.note}</div>` : ''}
+    </div>
+    <span class="freq-tag ${fc}">${fl}</span>
+    <div class="task-actions">
+      <button class="icon-btn" title="ערוך" onclick="openEditTask('${sid}','${tid}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+      </button>
+      <button class="icon-btn del" title="מחק" onclick="deleteTask('${sid}','${tid}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+// ─── SIDEBAR RENDER ───
+function renderSidebar() {
+  const members = STATE.members || {};
+  const tasks = STATE._tasks || {};
+  const sections = STATE.sections || {};
+
+  // count per owner
+  const ownerCount = {};
+  Object.entries(sections).forEach(([sid,sec]) => {
+    const owner = sec.owner;
+    const cnt = Object.keys(tasks[sid]||{}).length;
+    ownerCount[owner] = (ownerCount[owner]||0) + cnt;
+  });
+
+  const list = document.getElementById('team-list');
+  const allCount = Object.values(tasks).reduce((a,t)=>a+Object.keys(t).length,0);
+
+  let html = `<div class="team-item${STATE.activeOwner==='all'?' active':''}" onclick="setOwner('all')">
+    <div class="avatar av-all">כל</div>
+    <div class="team-name">כולם</div>
+    <span class="team-count">${allCount}</span>
+  </div>`;
+
+  Object.entries(members).forEach(([mid,m]) => {
+    const avClass = OWNER_AV[m.name] || 'av-new';
+    const initials = m.name.slice(0,2);
+    const isActive = STATE.activeOwner === m.name;
+    html += `<div class="team-item${isActive?' active':''}" onclick="setOwner('${m.name}')">
+      <div class="avatar ${avClass}">${initials}</div>
+      <div style="flex:1">
+        <div class="team-name">${m.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${m.role}</div>
+      </div>
+      <span class="team-count">${ownerCount[m.name]||0}</span>
+      <button class="icon-btn del" onclick="deleteMember(event,'${mid}')" title="הסר">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+
+  // populate modal owner select
+  const sel = document.getElementById('ms-owner');
+  sel.innerHTML = Object.values(members).map(m=>`<option value="${m.name}">${m.name}</option>`).join('');
+}
+
+function renderFreqFilters(counts) {
+  const wrap = document.getElementById('freq-filters');
+  let html = `<div class="freq-chip${STATE.activeFreq==='all'?' active':''}" onclick="setFreq('all')">
+    <div class="freq-dot" style="background:var(--text3)"></div>
+    <span class="freq-lbl">הכל</span>
+  </div>`;
+  Object.entries(FREQ_LABELS).forEach(([k,v]) => {
+    html += `<div class="freq-chip${STATE.activeFreq===k?' active':''}" onclick="setFreq('${k}')">
+      <div class="freq-dot" style="background:${FREQ_DOT[k]}"></div>
+      <span class="freq-lbl">${v}</span>
+      <span class="freq-c">${counts[k]||0}</span>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+// ─── ACTIONS ───
+window.toggleSection = function(sid) {
+  if (!STATE.openSections) STATE.openSections = {};
+  STATE.openSections[sid] = STATE.openSections[sid] === false ? true : false;
+  render();
+};
+
+window.setOwner = function(o) { STATE.activeOwner = o; render(); renderSidebar(); };
+window.setFreq = function(f) { STATE.activeFreq = f; render(); };
+
+window.toggleTask = function(sid, tid, val) {
+  update(ref(db, `tasks/${sid}/${tid}`), { done: val });
+};
+
+window.addTask = function(sid) {
+  const inp = document.getElementById(`new-task-${sid}`);
+  const freqEl = document.getElementById(`new-freq-${sid}`);
+  const text = (inp?.value || '').trim();
+  if (!text) return;
+  push(ref(db, `tasks/${sid}`), { text, freq: freqEl?.value || 'adhoc', note: '', done: false });
+  inp.value = '';
+  toast('משימה נוספה');
+};
+
+window.deleteTask = function(sid, tid) {
+  if (!confirm('למחוק משימה זו?')) return;
+  remove(ref(db, `tasks/${sid}/${tid}`));
+  toast('משימה נמחקה');
+};
+
+window.deleteSection = function(e, sid) {
+  e.stopPropagation();
+  if (!confirm('למחוק חברה זו וכל משימותיה?')) return;
+  remove(ref(db, `sections/${sid}`));
+  remove(ref(db, `tasks/${sid}`));
+  toast('חברה נמחקה');
+};
+
+// Edit task
+let editCtx = null;
+window.openEditTask = function(sid, tid) {
+  const t = (STATE._tasks?.[sid]||{})[tid];
+  if (!t) return;
+  editCtx = { sid, tid };
+  document.getElementById('mt-text').value = t.text;
+  document.getElementById('mt-freq').value = t.freq;
+  document.getElementById('mt-note').value = t.note || '';
+  openModal('modal-task');
+};
+window.confirmEditTask = function() {
+  if (!editCtx) return;
+  const { sid, tid } = editCtx;
+  update(ref(db, `tasks/${sid}/${tid}`), {
+    text: document.getElementById('mt-text').value.trim(),
+    freq: document.getElementById('mt-freq').value,
+    note: document.getElementById('mt-note').value.trim(),
+  });
+  closeModal('modal-task');
+  toast('משימה עודכנה');
+};
+
+// Add section
+window.openAddSection = function() {
+  document.getElementById('ms-name').value = '';
+  openModal('modal-section');
+};
+window.confirmAddSection = function() {
+  const name = document.getElementById('ms-name').value.trim();
+  const owner = document.getElementById('ms-owner').value;
+  if (!name) return;
+  const maxOrder = Math.max(0, ...Object.values(STATE.sections||{}).map(s=>s.order||0));
+  push(ref(db,'sections'), { name, owner, order: maxOrder+1 });
+  closeModal('modal-section');
+  toast('חברה נוספה');
+};
+
+// Members
+window.addMember = function() {
+  const name = document.getElementById('new-member-name').value.trim();
+  const role = document.getElementById('new-member-role').value;
+  if (!name) return;
+  push(ref(db,'members'), { name, role });
+  document.getElementById('new-member-name').value = '';
+  toast(`${name} נוסף לצוות`);
+};
+window.deleteMember = function(e, mid) {
+  e.stopPropagation();
+  const m = STATE.members?.[mid];
+  if (!m) return;
+  if (!confirm(`להסיר את ${m.name} מהצוות?`)) return;
+  remove(ref(db, `members/${mid}`));
+  toast(`${m.name} הוסר`);
+};
+
+// Reset
+window.resetAllDone = function() {
+  if (!confirm('לאפס את כל הסימונים?')) return;
+  const tasks = STATE._tasks || {};
+  Object.entries(tasks).forEach(([sid, stasks]) => {
+    Object.keys(stasks).forEach(tid => {
+      update(ref(db, `tasks/${sid}/${tid}`), { done: false });
+    });
+  });
+  toast('כל הסימונים אופסו');
+};
+
+// Modal helpers
+window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// Toast
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+window.toast = toast;
+</script>
+</body>
+</html>

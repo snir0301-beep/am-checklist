@@ -133,6 +133,11 @@ nav{background:var(--surface);border-bottom:1px solid var(--bd);display:flex;ali
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(6px);background:#18171A;color:#fff;font-size:13px;padding:9px 18px;border-radius:var(--r);opacity:0;pointer-events:none;transition:all .25s;z-index:999;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hid{display:none!important}
+.freq-group-header{display:flex;align-items:center;gap:8px;padding:8px 16px 4px;border-top:1px solid var(--bd)}
+.freq-group-header:first-child{border-top:none}
+.fgh-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.fgh-lbl{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px}
+.fgh-line{flex:1;height:1px;background:var(--bd)}
 </style>
 </head>
 <body>
@@ -210,9 +215,10 @@ import{getDatabase,ref,onValue,set,push,remove,update}from"https://www.gstatic.c
 import{getAuth,signInAnonymously}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const CFG={apiKey:"AIzaSyBsrAQiUafnKdlXn7H-KqUpe56TY8RQvwk",authDomain:"check-list-m-enginering.firebaseapp.com",databaseURL:"https://check-list-m-enginering-default-rtdb.firebaseio.com",projectId:"check-list-m-enginering",storageBucket:"check-list-m-enginering.firebasestorage.app",messagingSenderId:"763092275628",appId:"1:763092275628:web:2367189ca9e8c85f446a09"};
 const app=initializeApp(CFG);const db=getDatabase(app);const auth=getAuth(app);
-const FL={daily:"יומי",weekly:"שבועי",monthly:"חודשי",quarterly:"רבעוני",annual:"שנתי",adhoc:"לפי צורך"};
+const FL={daily:"שוטף",weekly:"שבועי",monthly:"חודשי",quarterly:"רבעוני",annual:"שנתי",adhoc:"לפי צורך"};
 const FD={daily:"#16794C",weekly:"#9A5B00",monthly:"#1B63C4",quarterly:"#6B5CE7",annual:"#C13030",adhoc:"#A09C95"};
 const FC={daily:"fd",weekly:"fw",monthly:"fm",quarterly:"fq",annual:"fa",adhoc:"fad"};
+const FREQ_ORDER=["daily","weekly","monthly","quarterly","annual","adhoc"];
 const CM={purple:{bg:"var(--pub)",tx:"var(--pu)",bd:"var(--pud)"},green:{bg:"var(--gnb)",tx:"var(--gn)",bd:"#A8DCC3"},blue:{bg:"var(--blb)",tx:"var(--bl)",bd:"#B3D0F5"},amber:{bg:"var(--amb)",tx:"var(--am)",bd:"#F5D99A"},teal:{bg:"var(--tlb)",tx:"var(--tl)",bd:"#9FD9D3"},red:{bg:"var(--rdb)",tx:"var(--rd)",bd:"#F5AEAE"}};
 const S={mem:{},sec:{},tsk:{},open:{},owner:"all",freq:"all",chips:{done:false}};
 let ectx=null;
@@ -282,6 +288,19 @@ function rMain(){
     const pw=tot?Math.round(dn/tot*100):0;
     const isOpen=S.open[sid]!==false;
     const c=gc(s.owner);
+    // Group tasks by freq in order
+    let tasksHtml="";
+    if(filt.length){
+      const groups={};
+      filt.forEach(([tid,t])=>{if(!groups[t.freq])groups[t.freq]=[];groups[t.freq].push([tid,t])});
+      FREQ_ORDER.forEach(fk=>{
+        if(!groups[fk]||!groups[fk].length)return;
+        tasksHtml+=`<div class="freq-group-header"><div class="fgh-dot" style="background:${FD[fk]}"></div><span class="fgh-lbl">${FL[fk]}</span><div class="fgh-line"></div></div>`;
+        tasksHtml+=groups[fk].map(([tid,t])=>tRow(sid,tid,t)).join("");
+      });
+    } else {
+      tasksHtml='<div class="empty-c">אין משימות תואמות</div>';
+    }
     html+=`<div class="co-card" id="co-${sid}">
 <div class="co-head" onclick="togSec('${sid}')">
 <svg class="chev${isOpen?" op":""}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -292,7 +311,7 @@ function rMain(){
 <button class="cod" onclick="delSec(event,'${sid}')" title="מחק חברה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg></button>
 </div></div>
 <div class="pbw"><div class="pbf" style="width:${pw}%"></div></div>
-${isOpen?`<div class="tlist">${filt.length?filt.map(([tid,t])=>tRow(sid,tid,t)).join(''):'<div class="empty-c">אין משימות תואמות</div>'}</div><div class="atbar"><input class="ati" id="nt-${sid}" type="text" placeholder="הוסף משימה..." onkeydown="if(event.key==='Enter')addTask('${sid}')"><select class="atsel" id="nf-${sid}">${Object.entries(FL).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><button class="atbtn" onclick="addTask('${sid}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button></div>`:""}
+${isOpen?`<div class="tlist">${tasksHtml}</div><div class="atbar"><input class="ati" id="nt-${sid}" type="text" placeholder="הוסף משימה..." onkeydown="if(event.key==='Enter')addTask('${sid}')"><select class="atsel" id="nf-${sid}">${Object.entries(FL).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><button class="atbtn" onclick="addTask('${sid}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button></div>`:""}
 </div>`;
   });
   document.getElementById("colist").innerHTML=html||'<div style="padding:60px;text-align:center;color:var(--tx3)">אין חברות</div>';
